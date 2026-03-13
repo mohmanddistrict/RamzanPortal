@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ramazan Package Payment - District Malakand</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            text-align: center;
+            color: #333;
+        }
+        header {
+            background-color: #ffffff;
+            padding: 20px;
+            border-bottom: 5px solid #006400; /* Pakistan Green */
+        }
+        .logo {
+            max-width: 120px;
+            height: auto;
+        }
+        .govt-text {
+            color: #006400;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+            text-transform: uppercase;
+        }
+        .sub-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 5px 0;
+            color: #444;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #006400;
+        }
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            text-align: left;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info-row {
+            margin: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding-bottom: 5px;
+        }
+        footer {
+            margin-top: 50px;
+            padding: 20px;
+            font-size: 0.9rem;
+            color: #666;
+            border-top: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="KP_logo.png" alt="KP Logo" class="logo">
+    <div class="govt-text">Government of Khyber Pakhtunkhwa</div>
+    <div class="sub-title">Ramazan Package Payment to Beneficiaries</div>
+    <div class="sub-title" style="color: #006400;">DISTRICT MALAKAND</div>
+</header>
+
+<div class="container">
+    <input type="text" id="cnicInput" placeholder="Enter 13 digits CNIC No. wihout (-)" maxlength="13">
+    <div id="result"></div>
+</div>
+
+<footer>
+    &copy; District Administration, Malakand<br>
+    Developed by <strong>Muhammad Tahir</strong>
+</footer>
+
+<script>
+    let excelData = [];
+
+    // Load the Excel file automatically when page loads
+    window.onload = async () => {
+        try {
+            const response = await fetch('payment.xlsx');
+            const arrayBuffer = await response.arrayBuffer();
+            const data = new Uint8Array(arrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            excelData = XLSX.utils.sheet_to_json(worksheet);
+            console.log("Database loaded successfully");
+        } catch (error) {
+            console.error("Error loading Excel file:", error);
+        }
+    };
+
+    const input = document.getElementById('cnicInput');
+    const resultDiv = document.getElementById('result');
+
+    input.addEventListener('input', function(e) {
+        let value = e.target.value;
+
+        // Clean input: Only numbers
+        if (/[^0-9]/.test(value)) {
+            resultDiv.innerHTML = "INVALID INPUT Please input 13 digits CNIC No. without - or spaces";
+            resultDiv.className = "error";
+            resultDiv.style.display = "block";
+            return;
+        }
+
+        if (value.length === 13) {
+            checkCNIC(value);
+        } else {
+            resultDiv.style.display = "none";
+        }
+    });
+
+    function checkCNIC(cnic) {
+        // Find the record in the excel data
+        const record = excelData.find(row => String(row.cnic).trim() === cnic);
+
+        if (record) {
+            resultDiv.className = "success";
+            resultDiv.innerHTML = `
+                <div class="info-row"><strong>CNIC:</strong> ${record.cnic}</div>
+                <div class="info-row"><strong>Name:</strong> ${record.name}</div>
+                <div class="info-row"><strong>TRX ID:</strong> ${record.ID}</div>
+                <div class="info-row"><strong>Disbursement Date:</strong> ${record.date}</div>
+                <div class="info-row"><strong>Amount:</strong> Rs. ${record.amount}</div>
+            `;
+        } else {
+            resultDiv.className = "error";
+            resultDiv.innerHTML = "YOU ARE NOT A REGISTERED BENEFICIARY OF KP Ramzan Package 2026 - District Malakand";
+        }
+        resultDiv.style.display = "block";
+    }
+</script>
+
+</body>
+</html>
